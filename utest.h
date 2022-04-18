@@ -1,4 +1,4 @@
 #include <stdio.h>
-#include "queue.h"
+#include "queue/queue.h"
 
 void test();

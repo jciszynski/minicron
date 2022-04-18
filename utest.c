@@ -1,5 +1,5 @@
 #include <stdio.h>
-#include "queue.h"
+#include "queue/queue.h"
 
 
 //przykładowe testy kolejki

@@ -12,10 +12,7 @@ Prosty harmonogram zadań wzorowany na linuxowym cronie
 `hour` `minutes` godzina wykonania zadania  
 `taskX` zadanie do wykonania  
 `logLevel` określa poziom zapisywania danych do logu systemowego zwracanych na standarodwe wyjscia przez aplikację:
-- `0`  użytkownik chce otrzymać treść, jaką polecenie wypisało na standardowe wyjście (stdout)  
-- `1`  użytkownik chce otrzymać treść, jaką polecenie wypisało na wyjście błędów (stderr).  
-- `2`  użytkownik chce otrzymać treść, jaką polecenie wypisało na standardowe wyjście i wyjście błędów.  
+- `0`  standardowe wyjście (stdout)  
+- `1`  na wyjście błędów (stderr).  
+- `2`  standardowe wyjście i wyjście błędów.  
 
-## queue.c
-
-## read.c

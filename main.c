@@ -1,8 +1,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <errno.h>
-#include "read.h"
-#include "queue.h"
+#include "queue/read.h"
+#include "queue/queue.h"
 #include "utest.h"
 
 int main(int argc, char *argv[])

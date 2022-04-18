@@ -1,11 +1,11 @@
-OBJ = main.o read.o queue.o utest.o
+OBJ = main.o queue/read.o queue/queue.o utest.o
 
 all: hello
 
 hello: $(OBJ)
 	gcc $(OBJ) -o minicron
 
-$(OBJ): read.h queue.h utest.h
+$(OBJ): queue/read.h queue/queue.h utest.h
 
 .PHONY: clean
 clean:
