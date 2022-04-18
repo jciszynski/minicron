@@ -15,7 +15,7 @@ int main(int argc, char *argv[])
 		return 1;
 	}
 
-	taskQueue *kolejka ;
+	taskQueue *kolejka;
 	kolejka = readFile(argv[1]);
 	if (errno != 0)
 		return_status = EXIT_FAILURE;
