@@ -85,6 +85,7 @@ void queueDestroy(taskQueue *taskQueue)
     while (temp != NULL)
     {
         next = temp->next;
+        free(temp->command);
         free(temp);
         temp = next;
     }
@@ -102,9 +103,11 @@ void rotateQueue(taskQueue *taskQueue)
     struct tm *timeinfo;
     time(&rawtime);
     timeinfo = localtime(&rawtime);
-
+    task *first = getTask(taskQueue);
     while ((taskQueue->first->hour) < (timeinfo->tm_hour) || (taskQueue->first->hour == timeinfo->tm_hour && taskQueue->first->min < timeinfo->tm_min))
-    {
+    {   
+        if(taskQueue->first !=first)
+            break;
         getTask(taskQueue);
     }
 }

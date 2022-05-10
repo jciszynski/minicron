@@ -41,7 +41,7 @@ taskQueue *readFile(char *sciezka)
 			return NULL;
 		}
 
-		tmp = malloc(sizeof(char)*strlen(command));
+		tmp = malloc(sizeof(char) * strlen(command));
 		strcpy(tmp, command);
 		addTask(kolejka, hour, min, tmp, loglevel);
 
@@ -57,4 +57,48 @@ taskQueue *readFile(char *sciezka)
 	fclose(plik);
 	errno = 0;
 	return kolejka;
+}
+
+int getTimeToRun(task *zadanie)
+{
+	time_t rawtime;
+	struct tm *timeinfo;
+	time(&rawtime);
+	timeinfo = localtime(&rawtime);
+
+	int timeToRun = ((timeinfo->tm_hour - zadanie->hour) * 60 + timeinfo->tm_min - zadanie->min);
+	if (timeToRun < 0)
+	{
+		timeToRun += 24 * 60;
+	}
+
+	return timeToRun;
+
+}
+
+char **splitCommand(char *command)
+{
+	char *commandCopy = malloc(sizeof(char) * strlen(command));
+	strcpy(commandCopy, command);
+
+	char **argv = NULL;
+	char *argument = strtok(commandCopy, " ");
+	int argc = 0;
+
+	while (argument)
+	{
+		argv = realloc(argv, sizeof(char *) * ++argc);
+
+		if (argv == NULL)
+			exit(-1);
+
+		argv[argc - 1] = argument;
+
+		argument = strtok(NULL, " ");
+	}
+
+	argv = realloc(argv, ((argc + 1) * sizeof(char *)));
+	argv[argc] = 0;
+
+	return argv;
 }

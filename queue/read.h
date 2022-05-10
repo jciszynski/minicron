@@ -4,6 +4,7 @@
 #include "queue.h"
 
 taskQueue *readFile();
-
+int getTimeToRun();
+char **splitCommand(char *command);
 #endif
 

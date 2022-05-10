@@ -1,0 +1,10 @@
+make --dry-run --always-make --keep-going --print-directory
+make: Entering directory '/home/jc/so/minicron'
+cc    -c -o main.o main.c
+cc    -c -o queue/read.o queue/read.c
+cc    -c -o queue/queue.o queue/queue.c
+cc    -c -o utest.o utest.c
+ 
+gcc main.o queue/read.o queue/queue.o utest.o -o minicron
+make: Leaving directory '/home/jc/so/minicron'
+ 
