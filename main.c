@@ -9,7 +9,6 @@
 #include <sys/wait.h>
 #include "queue/read.h"
 #include "queue/queue.h"
-#include "utest.h"
 
 char interruptedFlag = 0;
 int handledSignal = 0;
