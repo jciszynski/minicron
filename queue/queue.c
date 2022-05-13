@@ -98,17 +98,20 @@ Przesuwa kolejkę, tak, że pierwsze zadanie jest kolejnym do wykonanania
 void rotateQueue(taskQueue *taskQueue)
 {
 
-    if (taskQueue->first == NULL ||taskQueue->first->next == NULL)
+    if (taskQueue->first == NULL || taskQueue->first->next == NULL)
         return;
     time_t rawtime;
     struct tm *timeinfo;
     time(&rawtime);
     timeinfo = localtime(&rawtime);
-    task *first = getTask(taskQueue);
+    task *first = NULL;
     while ((taskQueue->first->hour) < (timeinfo->tm_hour) || (taskQueue->first->hour == timeinfo->tm_hour && taskQueue->first->min < timeinfo->tm_min))
-    {   
-        if(taskQueue->first !=first)
+    {
+        if (taskQueue->first == first)
             break;
+
+        if (!first)
+            first = taskQueue->first;
         getTask(taskQueue);
     }
 }
@@ -126,7 +129,7 @@ void printQueue(taskQueue *taskQueue)
     task *temp = getTask(taskQueue);
     do
     {
-        printf("Task: %d:%d %s LogLevel: %d\n",  temp->hour, temp->min, temp->command, temp->loglevel);
+        printf("Task: %d:%d %s LogLevel: %d\n", temp->hour, temp->min, temp->command, temp->loglevel);
         temp = getTask(taskQueue);
-    } while (temp!=first);
+    } while (temp != first);
 }

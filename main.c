@@ -13,11 +13,13 @@
 char interruptedFlag = 0;
 int handledSignal = 0;
 char doneAllTasksOnce = 0;
+char doneAllTasksOnceFlag = 0;
+char doGetTaskFlag = 1;
 taskQueue *kolejka = NULL;
 FILE *loggerFd;
 int loggerFn;
 task *firstExecutedTask = NULL;
-
+task *prevTask = NULL;
 void printUsage();
 void sigusr1Handler();
 void sigusr2Handler();
@@ -45,7 +47,9 @@ int main(int argc, char *argv[])
 	}
 
 	rotateQueue(kolejka);
+
 	// printQueue(kolejka);
+	// fflush(stdout);
 
 	int pid = fork();
 
@@ -58,7 +62,6 @@ int main(int argc, char *argv[])
 	if (pid > 0)
 	{
 		printf("Demon started successfully\n");
-		queueDestroy(kolejka);
 		exit(EXIT_SUCCESS);
 	}
 
@@ -119,17 +122,27 @@ int main(int argc, char *argv[])
 			}
 			rotateQueue(kolejka);
 			handledSignal = 0;
+			firstExecutedTask = NULL;
 			syslog(LOG_INFO, "Tasklist reloaded");
 		}
 
-		if (handledSignal != SIGUSR2)
+		if (doneAllTasksOnceFlag)
 		{
+			int timeLeft = sleep(60);
+
+			while (timeLeft&&(handledSignal!=SIGINT || handledSignal != SIGUSR1))
+				timeLeft = sleep(timeLeft);
+			doneAllTasksOnceFlag = 0;
 		}
-		currentTask = getTask(kolejka);
+
+		if (doGetTaskFlag)
+			currentTask = getTask(kolejka);
+		doGetTaskFlag = 1;
 
 		timeToRun = getTimeToRun(currentTask);
-		fprintf(loggerFd, "TimeTorun: %d\n", timeToRun);
-		fflush(loggerFd);
+
+		syslog(LOG_INFO, "TimeTorun: %d\n", timeToRun);
+
 		if (!interruptedFlag)
 			sleep(timeToRun);
 
@@ -137,15 +150,18 @@ int main(int argc, char *argv[])
 			break;
 
 		if (handledSignal == SIGUSR1)
+		{
 			continue;
+		}
 
 		if (handledSignal == SIGUSR2 || handledSignal == SIGCHLD)
 		{
+			doGetTaskFlag = 0;
 			handledSignal = 0;
 			continue;
 		}
 
-		pid = fork();
+		int pid = fork();
 
 		if (pid < 0)
 		{
@@ -155,11 +171,8 @@ int main(int argc, char *argv[])
 
 		if (pid > 0)
 		{
-			if (firstExecutedTask == NULL)
-				firstExecutedTask = currentTask;
-			else if (firstExecutedTask == currentTask)
-				doneAllTasksOnce = 1;
 		}
+
 		if (pid == 0)
 		{
 
@@ -169,22 +182,27 @@ int main(int argc, char *argv[])
 			{
 			case 0:
 				if (dup2(loggerFn, STDOUT_FILENO) == -1)
+				{
 					syslog(LOG_ERR, "DUP2 failure");
-				exit(EXIT_FAILURE);
+					exit(EXIT_FAILURE);
+				}
 				break;
 
 			case 1:
 				if (dup2(loggerFn, STDERR_FILENO) == -1)
+				{
 					syslog(LOG_ERR, "DUP2 failure");
-				exit(EXIT_FAILURE);
+					exit(EXIT_FAILURE);
+				}
 				break;
 
 			case 2:
 				if (
-					dup2(loggerFn, STDOUT_FILENO) == -1 ||
-					dup2(loggerFn, STDERR_FILENO) == -1)
+					dup2(loggerFn, STDOUT_FILENO) == -1 || dup2(loggerFn, STDERR_FILENO) == -1)
+				{
 					syslog(LOG_ERR, "DUP2 failure");
-				exit(EXIT_FAILURE);
+					exit(EXIT_FAILURE);
+				}
 				break;
 			}
 
@@ -193,12 +211,24 @@ int main(int argc, char *argv[])
 			execvp(splitedCommand[0], splitedCommand);
 
 			syslog(LOG_ERR, "Run task %s failed: %s", currentTask->command, strerror(errno));
+
 			free(splitedCommand);
 			exit(1);
+		}
+
+		syslog(LOG_DEBUG, "FirstExe: %p, %p, %p ", firstExecutedTask, kolejka->first, currentTask);
+		if (firstExecutedTask == NULL)
+			firstExecutedTask = currentTask;
+		else if (firstExecutedTask == (kolejka->first))
+		{
+			syslog(LOG_DEBUG, "Done");
+			doneAllTasksOnce = 1;
+			doneAllTasksOnceFlag = 1;
 		}
 	}
 
 	queueDestroy(kolejka);
+	fflush(loggerFd);
 	pclose(loggerFd);
 	syslog(LOG_INFO, "Exiting ...");
 	exit(EXIT_SUCCESS);
@@ -237,6 +267,7 @@ void sigusr2Handler(int signum)
 			fprintf(loggerFd, "%s ", tmpTask->command);
 			tmpTask = tmpTask->next;
 		}
+
 		fprintf(loggerFd, "\n");
 		fflush(loggerFd);
 	}
@@ -244,6 +275,7 @@ void sigusr2Handler(int signum)
 
 void sigchldHandler(int signum)
 {
+	fflush(loggerFd);
 	handledSignal = signum;
 	int status;
 	pid_t cpid = wait(&status);

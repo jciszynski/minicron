@@ -51,7 +51,7 @@ taskQueue *readFile(char *sciezka)
 			return NULL;
 		}
 
-		if (loglevel<0 || loglevel>2)
+		if (loglevel < 0 || loglevel > 2)
 		{
 			char errorString[100];
 			sprintf(errorString, "Parsing file failed on line %d. Invalid logLevel", curLine);
@@ -88,10 +88,12 @@ int getTimeToRun(task *zadanie)
 	timeinfo = localtime(&rawtime);
 
 	int timeToRun = ((zadanie->hour - timeinfo->tm_hour) * 60 + zadanie->min - timeinfo->tm_min) * 60 - timeinfo->tm_sec;
-	if (timeToRun < 0)
+	if (timeToRun <= 0 && timeToRun > -60)
 	{
-		timeToRun += (24 * 60 * 60);
+		timeToRun = 1;
 	}
+	else if(timeToRun < 0)
+		timeToRun += (24 * 60 * 60);
 
 	return timeToRun;
 }
