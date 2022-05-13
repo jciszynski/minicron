@@ -41,6 +41,23 @@ taskQueue *readFile(char *sciezka)
 			return NULL;
 		}
 
+		if (hour < 0 || hour > 23 || min < 0 || min > 59)
+		{
+			char errorString[100];
+			sprintf(errorString, "Parsing file failed on line %d. Invalid task run time", curLine);
+			errno = EINVAL;
+			perror(errorString);
+			return NULL;
+		}
+
+		if (loglevel<0 || loglevel>2)
+		{
+			char errorString[100];
+			sprintf(errorString, "Parsing file failed on line %d. Invalid logLevel", curLine);
+			errno = EINVAL;
+			perror(errorString);
+			return NULL;
+		}
 		tmp = malloc(sizeof(char) * strlen(command));
 		strcpy(tmp, command);
 		addTask(kolejka, hour, min, tmp, loglevel);
