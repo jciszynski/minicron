@@ -66,14 +66,13 @@ int getTimeToRun(task *zadanie)
 	time(&rawtime);
 	timeinfo = localtime(&rawtime);
 
-	int timeToRun = ((timeinfo->tm_hour - zadanie->hour) * 60 + timeinfo->tm_min - zadanie->min) *60;
+	int timeToRun = ((zadanie->hour - timeinfo->tm_hour) * 60 + zadanie->min - timeinfo->tm_min) * 60;
 	if (timeToRun < 0)
 	{
-		timeToRun += (24 * 60 *60);
+		timeToRun += (24 * 60 * 60);
 	}
 
 	return timeToRun;
-
 }
 
 char **splitCommand(char *command)
