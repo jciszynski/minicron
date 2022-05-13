@@ -66,10 +66,10 @@ int getTimeToRun(task *zadanie)
 	time(&rawtime);
 	timeinfo = localtime(&rawtime);
 
-	int timeToRun = ((timeinfo->tm_hour - zadanie->hour) * 60 + timeinfo->tm_min - zadanie->min);
+	int timeToRun = ((timeinfo->tm_hour - zadanie->hour) * 60 + timeinfo->tm_min - zadanie->min) *60;
 	if (timeToRun < 0)
 	{
-		timeToRun += 24 * 60;
+		timeToRun += (24 * 60 *60);
 	}
 
 	return timeToRun;
