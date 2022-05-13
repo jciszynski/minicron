@@ -20,11 +20,11 @@ void printUsage();
 void sigusr1Handler();
 void sigusr2Handler();
 void sigintHandler();
+void sigchldHandler();
 
 int main(int argc, char *argv[])
 {
 
-	int return_status = EXIT_SUCCESS;
 	char buffer[100];
 
 	if (argc != 2)
@@ -32,10 +32,15 @@ int main(int argc, char *argv[])
 		fprintf(stderr, "Invalid number of arguments\n");
 		printUsage();
 
-		// return EXIT_FAILURE;
+		return EXIT_FAILURE;
 	}
 
 	kolejka = readFile("test.txt");
+	if (errno != 0)
+	{
+		printf("Failed to parse file. Exiting...");
+		exit(EXIT_FAILURE);
+	}
 	rotateQueue(kolejka);
 	// printQueue(kolejka);
 
@@ -50,7 +55,7 @@ int main(int argc, char *argv[])
 	if (pid > 0)
 	{
 		printf("Demon started successfully\n");
-		// queueDestroy(kolejka);
+		queueDestroy(kolejka);
 		exit(EXIT_SUCCESS);
 	}
 
@@ -78,6 +83,12 @@ int main(int argc, char *argv[])
 		exit(EXIT_FAILURE);
 	}
 	signal(SIGUSR2, sigusr2Handler);
+	if (errno != 0)
+	{
+		syslog(LOG_ERR, "Signal failed. Terminating...");
+		exit(EXIT_FAILURE);
+	}
+	signal(SIGCHLD, sigchldHandler);
 	if (errno != 0)
 	{
 		syslog(LOG_ERR, "Signal failed. Terminating...");
@@ -113,9 +124,8 @@ int main(int argc, char *argv[])
 		}
 		currentTask = getTask(kolejka);
 
-
 		timeToRun = getTimeToRun(currentTask);
-		fprintf(loggerFd, "TimeTorun: %d",timeToRun);
+		fprintf(loggerFd, "TimeTorun: %d\n", timeToRun);
 		fflush(loggerFd);
 		if (!interruptedFlag)
 			sleep(timeToRun);
@@ -126,7 +136,7 @@ int main(int argc, char *argv[])
 		if (handledSignal == SIGUSR1)
 			continue;
 
-		if (handledSignal == SIGUSR2)
+		if (handledSignal == SIGUSR2 || handledSignal == SIGCHLD)
 		{
 			handledSignal = 0;
 			continue;
@@ -142,7 +152,6 @@ int main(int argc, char *argv[])
 
 		if (pid > 0)
 		{
-			signal(SIGCHLD, SIG_IGN);
 			if (firstExecutedTask == NULL)
 				firstExecutedTask = currentTask;
 			else if (firstExecutedTask == currentTask)
@@ -228,4 +237,12 @@ void sigusr2Handler(int signum)
 		fprintf(loggerFd, "\n");
 		fflush(loggerFd);
 	}
+}
+
+void sigchldHandler(int signum)
+{
+	handledSignal = signum;
+	int status;
+	pid_t cpid = wait(&status);
+	syslog(LOG_INFO, "Task with pid: %d ended with code: %d\n", cpid, status);
 }
