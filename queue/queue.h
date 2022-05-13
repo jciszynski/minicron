@@ -1,5 +1,5 @@
 /*
-Plik nagłówkowy kolejki, który w praktyce jest buforem cyklicznym.
+Plik nagłówkowy kolejki cyklicznej.
 Bufor przy dodawaniu elementów zachowuje chronologie zadań.
 Po pobraniu zadania jest ono przenoszone na koniec kolejki, po czym zwracany jest wskaźnik na to zadanie.
 */

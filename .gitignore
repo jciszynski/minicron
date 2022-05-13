@@ -3,3 +3,5 @@
 /test.txt
 *.o
 /bin
+/.gitignore
+/.vscode

@@ -97,7 +97,8 @@ Przesuwa kolejkę, tak, że pierwsze zadanie jest kolejnym do wykonanania
 */
 void rotateQueue(taskQueue *taskQueue)
 {
-    if (taskQueue->first->next == NULL)
+
+    if (taskQueue->first == NULL ||taskQueue->first->next == NULL)
         return;
     time_t rawtime;
     struct tm *timeinfo;

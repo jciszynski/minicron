@@ -7,7 +7,8 @@
 #include "queue.h"
 
 /*
-Zwraca liste tasków;
+Parsuje plik z listą zadań.
+Zwraca kolejkę zadań
 */
 taskQueue *readFile(char *sciezka)
 {
@@ -76,6 +77,9 @@ taskQueue *readFile(char *sciezka)
 	return kolejka;
 }
 
+/*
+Zwraca czas w sekundach do uruchomienia podanego w argumencie zadania
+*/
 int getTimeToRun(task *zadanie)
 {
 	time_t rawtime;
@@ -83,7 +87,7 @@ int getTimeToRun(task *zadanie)
 	time(&rawtime);
 	timeinfo = localtime(&rawtime);
 
-	int timeToRun = ((zadanie->hour - timeinfo->tm_hour) * 60 + zadanie->min - timeinfo->tm_min) * 60;
+	int timeToRun = ((zadanie->hour - timeinfo->tm_hour) * 60 + zadanie->min - timeinfo->tm_min) * 60 - timeinfo->tm_sec;
 	if (timeToRun < 0)
 	{
 		timeToRun += (24 * 60 * 60);
@@ -92,6 +96,10 @@ int getTimeToRun(task *zadanie)
 	return timeToRun;
 }
 
+/*
+Dzieli podany łańcuch znaków i przekstałca na tablicę łańcuchów znakowych.
+Jako separator użyty jest znak " " (spacja)
+*/
 char **splitCommand(char *command)
 {
 	char *commandCopy = malloc(sizeof(char) * strlen(command));

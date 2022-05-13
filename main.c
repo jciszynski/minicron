@@ -4,17 +4,19 @@
 #include <errno.h>
 #include <signal.h>
 #include <syslog.h>
+#include <string.h>
+#include <sys/wait.h>
 #include "queue/read.h"
 #include "queue/queue.h"
 #include "utest.h"
 
-volatile char interruptedFlag = 0;
-volatile int handledSignal = 0;
-volatile char doneAllTasksOnce = 0;
-volatile taskQueue *kolejka = NULL;
-volatile FILE *loggerFd;
-volatile int loggerFn;
-volatile task *firstExecutedTask = NULL;
+char interruptedFlag = 0;
+int handledSignal = 0;
+char doneAllTasksOnce = 0;
+taskQueue *kolejka = NULL;
+FILE *loggerFd;
+int loggerFn;
+task *firstExecutedTask = NULL;
 
 void printUsage();
 void sigusr1Handler();
@@ -35,12 +37,13 @@ int main(int argc, char *argv[])
 		return EXIT_FAILURE;
 	}
 
-	kolejka = readFile("test.txt");
+	kolejka = readFile(argv[1]);
 	if (errno != 0)
 	{
-		printf("Failed to parse file. Exiting...");
+		printf("Failed to parse file. Exiting...\n");
 		exit(EXIT_FAILURE);
 	}
+
 	rotateQueue(kolejka);
 	// printQueue(kolejka);
 
@@ -64,7 +67,7 @@ int main(int argc, char *argv[])
 	close(STDERR_FILENO);
 
 	openlog("minicron", LOG_PID, LOG_USER);
-	syslog(LOG_INFO, "Minicron started");
+	syslog(LOG_INFO, "Minicron started\n");
 
 	task *currentTask;
 	int timeToRun;
@@ -167,12 +170,13 @@ int main(int argc, char *argv[])
 			case 0:
 				if (dup2(loggerFn, STDOUT_FILENO) == -1)
 					syslog(LOG_ERR, "DUP2 failure");
-
+				exit(EXIT_FAILURE);
 				break;
 
 			case 1:
 				if (dup2(loggerFn, STDERR_FILENO) == -1)
 					syslog(LOG_ERR, "DUP2 failure");
+				exit(EXIT_FAILURE);
 				break;
 
 			case 2:
@@ -180,16 +184,15 @@ int main(int argc, char *argv[])
 					dup2(loggerFn, STDOUT_FILENO) == -1 ||
 					dup2(loggerFn, STDERR_FILENO) == -1)
 					syslog(LOG_ERR, "DUP2 failure");
+				exit(EXIT_FAILURE);
 				break;
 			}
 
-			sprintf(buffer, "Running command %s", currentTask->command);
-			syslog(LOG_INFO, buffer);
+			syslog(LOG_INFO, "Running command %s", currentTask->command);
 
 			execvp(splitedCommand[0], splitedCommand);
 
-			sprintf(buffer, "Run task %s failed: %d", currentTask->command, strerror(errno));
-			syslog(LOG_ERR, buffer);
+			syslog(LOG_ERR, "Run task %s failed: %s", currentTask->command, strerror(errno));
 			free(splitedCommand);
 			exit(1);
 		}
