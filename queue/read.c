@@ -104,6 +104,8 @@ Jako separator użyty jest znak " " (spacja)
 */
 char **splitCommand(char *command)
 {
+
+	//ls\0-l\0
 	char *commandCopy = malloc(sizeof(char) * strlen(command));
 	strcpy(commandCopy, command);
 
@@ -119,7 +121,8 @@ char **splitCommand(char *command)
 			exit(-1);
 
 		argv[argc - 1] = argument;
-
+		//argv[0] = //ls\0
+		//argv[1] = //-l\0
 		argument = strtok(NULL, " ");
 	}
 

@@ -28,14 +28,10 @@ void sigchldHandler();
 
 int main(int argc, char *argv[])
 {
-
-	char buffer[100];
-
 	if (argc != 2)
 	{
 		fprintf(stderr, "Invalid number of arguments\n");
 		printUsage();
-
 		return EXIT_FAILURE;
 	}
 
@@ -73,7 +69,7 @@ int main(int argc, char *argv[])
 		exit(EXIT_FAILURE);
 	}
 
-	if(dup2(devNull, STDOUT_FILENO) == -1 || dup2(devNull, STDIN_FILENO) ==-1)
+	if(dup2(devNull, STDOUT_FILENO) == -1 || dup2(devNull, STDERR_FILENO) ==-1)
 	{
 		syslog(LOG_ERR, "Dup2 failure Terminating...");
 		exit(EXIT_FAILURE);
@@ -115,12 +111,12 @@ int main(int argc, char *argv[])
 	}
 
 	loggerFd = popen("logger -t minicron", "w");
-	loggerFn = fileno(loggerFd);
 	if (loggerFd == NULL)
 	{
 		syslog(LOG_ERR, "Cannot open logger pipe...");
 		exit(EXIT_FAILURE);
 	}
+	loggerFn = fileno(loggerFd);
 
 	while (!interruptedFlag)
 	{
@@ -154,7 +150,7 @@ int main(int argc, char *argv[])
 
 		timeToRun = getTimeToRun(currentTask);
 
-		syslog(LOG_INFO, "TimeTorun: %d\n", timeToRun);
+		//syslog(LOG_INFO, "TimeTorun: %d\n", timeToRun);
 
 		if (!interruptedFlag)
 			sleep(timeToRun);
@@ -199,7 +195,7 @@ int main(int argc, char *argv[])
 					syslog(LOG_ERR, "DUP2 failure");
 					exit(EXIT_FAILURE);
 				}
-				close(STDERR_FILENO);
+
 				break;
 
 			case 1:
@@ -230,12 +226,12 @@ int main(int argc, char *argv[])
 			exit(1);
 		}
 
-		syslog(LOG_DEBUG, "FirstExe: %p, %p, %p ", firstExecutedTask, kolejka->first, currentTask);
+		//syslog(LOG_DEBUG, "FirstExe: %p, %p, %p ", firstExecutedTask, kolejka->first, currentTask);
 		if (firstExecutedTask == NULL)
 			firstExecutedTask = currentTask;
 		else if (firstExecutedTask == (kolejka->first))
 		{
-			syslog(LOG_DEBUG, "Done");
+			//syslog(LOG_DEBUG, "Done");
 			doneAllTasksOnce = 1;
 			doneAllTasksOnceFlag = 1;
 		}
