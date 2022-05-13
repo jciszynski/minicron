@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
+#include <fcntl.h>
 #include <errno.h>
 #include <signal.h>
 #include <syslog.h>
@@ -65,9 +66,22 @@ int main(int argc, char *argv[])
 		exit(EXIT_SUCCESS);
 	}
 
+	int devNull = open("/dev/null", O_WRONLY);
+
+	if (devNull == -1)
+	{
+		syslog(LOG_ERR, "Cannot open /dev/null\n. Terminating...");
+		exit(EXIT_FAILURE);
+	}
+
+	if(dup2(devNull, STDOUT_FILENO) == -1 || dup2(devNull, STDIN_FILENO) ==-1)
+	{
+		syslog(LOG_ERR, "Dup2 failure Terminating...");
+		exit(EXIT_FAILURE);
+	}
+
 	close(STDIN_FILENO);
-	close(STDOUT_FILENO);
-	close(STDERR_FILENO);
+
 
 	openlog("minicron", LOG_PID, LOG_USER);
 	syslog(LOG_INFO, "Minicron started\n");
@@ -130,7 +144,7 @@ int main(int argc, char *argv[])
 		{
 			int timeLeft = sleep(60);
 
-			while (timeLeft&&(handledSignal!=SIGINT || handledSignal != SIGUSR1))
+			while (timeLeft && (handledSignal != SIGINT || handledSignal != SIGUSR1))
 				timeLeft = sleep(timeLeft);
 			doneAllTasksOnceFlag = 0;
 		}
@@ -186,6 +200,7 @@ int main(int argc, char *argv[])
 					syslog(LOG_ERR, "DUP2 failure");
 					exit(EXIT_FAILURE);
 				}
+				close(STDERR_FILENO);
 				break;
 
 			case 1:
