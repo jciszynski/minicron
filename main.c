@@ -12,6 +12,7 @@
 
 char interruptedFlag = 0;
 int handledSignal = 0;
+int taskRunned = 0;
 char doneAllTasksOnce = 0;
 char doneAllTasksOnceFlag = 0;
 char doGetTaskFlag = 1;
@@ -180,6 +181,7 @@ int main(int argc, char *argv[])
 
 		if (pid > 0)
 		{
+			taskRunned++;
 		}
 
 		if (pid == 0)
@@ -237,6 +239,8 @@ int main(int argc, char *argv[])
 		}
 	}
 
+	while(taskRunned!=0)
+		sleep(1);
 	queueDestroy(kolejka);
 	fflush(loggerFd);
 	pclose(loggerFd);
@@ -291,5 +295,8 @@ void sigchldHandler(int signum)
 	handledSignal = signum;
 	int status;
 	pid_t cpid = wait(&status);
+	if(pid == -1)
+		return;
 	syslog(LOG_INFO, "Task with pid: %d ended with code: %d\n", cpid, status);
+	taskRunned--;
 }
