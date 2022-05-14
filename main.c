@@ -15,6 +15,7 @@ int handledSignal = 0;
 char doneAllTasksOnce = 0;
 char doneAllTasksOnceFlag = 0;
 char doGetTaskFlag = 1;
+task *currentTask;
 taskQueue *kolejka = NULL;
 FILE *loggerFd;
 int loggerFn;
@@ -69,7 +70,7 @@ int main(int argc, char *argv[])
 		exit(EXIT_FAILURE);
 	}
 
-	if(dup2(devNull, STDOUT_FILENO) == -1 || dup2(devNull, STDERR_FILENO) ==-1)
+	if (dup2(devNull, STDOUT_FILENO) == -1 || dup2(devNull, STDERR_FILENO) == -1)
 	{
 		syslog(LOG_ERR, "Dup2 failure Terminating...");
 		exit(EXIT_FAILURE);
@@ -77,11 +78,10 @@ int main(int argc, char *argv[])
 
 	close(STDIN_FILENO);
 
-
 	openlog("minicron", LOG_PID, LOG_USER);
 	syslog(LOG_INFO, "Minicron started\n");
 
-	task *currentTask;
+
 	int timeToRun;
 	char **splitedCommand;
 
@@ -150,7 +150,7 @@ int main(int argc, char *argv[])
 
 		timeToRun = getTimeToRun(currentTask);
 
-		//syslog(LOG_INFO, "TimeTorun: %d\n", timeToRun);
+		// syslog(LOG_INFO, "TimeTorun: %d\n", timeToRun);
 
 		if (!interruptedFlag)
 			sleep(timeToRun);
@@ -226,12 +226,12 @@ int main(int argc, char *argv[])
 			exit(1);
 		}
 
-		//syslog(LOG_DEBUG, "FirstExe: %p, %p, %p ", firstExecutedTask, kolejka->first, currentTask);
+		// syslog(LOG_DEBUG, "FirstExe: %p, %p, %p ", firstExecutedTask, kolejka->first, currentTask);
 		if (firstExecutedTask == NULL)
 			firstExecutedTask = currentTask;
 		else if (firstExecutedTask == (kolejka->first))
 		{
-			//syslog(LOG_DEBUG, "Done");
+			// syslog(LOG_DEBUG, "Done");
 			doneAllTasksOnce = 1;
 			doneAllTasksOnceFlag = 1;
 		}
@@ -271,6 +271,8 @@ void sigusr2Handler(int signum)
 	{
 		task *tmpTask = kolejka->first;
 		fprintf(loggerFd, "Handled SIGUSR2, tasks not runned:");
+		if (firstExecutedTask != currentTask)
+			fprintf(loggerFd, "%s ", currentTask->command);
 
 		while (firstExecutedTask != tmpTask)
 		{
